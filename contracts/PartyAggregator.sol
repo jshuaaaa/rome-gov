@@ -1,8 +1,9 @@
+// SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.10;
 
-contract PartyProposal {
-        
-    enum partyVerdict {
+contract PartyAggregator {
+
+        enum partyVerdict {
             Pending,
             Possitive,
             Negative
@@ -41,12 +42,21 @@ contract PartyProposal {
         uint256 startTimestamp;
     }
 
-
-    uint256 private _proposalCountl;
-    address private _party;
-    uint40 constant PROPOSAL_DURATION = 1 weeks;
-
-    constructor(address party) {
-        _party = party;
+    struct Party {
+        /// @notice id of party
+        uint id;
+        /// @notice list of addresses delegated to this party
+        address[] delegators;
+        /// @notice list of tokens which the party operates on
+        address[] token;
+        /// @notice threshold of minimum token value for users to be able to join this party
+        uint threshold;
     }
+
+    uint40 constant PROPOSAL_DURATION = 1 weeks;
+    address private _token;
+    uint private _delegatorThreshold;
+
+    /// @notice party id => proposal count of that party
+    mapping(uint256 => uint256) proposalCount;
 }
