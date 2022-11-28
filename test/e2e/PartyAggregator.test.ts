@@ -64,7 +64,11 @@ describe('PartyAggregator', function () {
     await connect.joinParty(1);
     await connect.leaveParty(1);
     const party = await partyAgg.parties(1);
-
+    const userParty = await partyAgg.userParties(deployer.address)
+    
     expect(party.delegators.length).to.equal(1);
+    // Should be empty as user has no parties
+    expect(userParty.length).to.equal(0)
   })
 });
+

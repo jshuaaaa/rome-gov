@@ -101,7 +101,7 @@ contract PartyAggregator is IPartyAggregator {
     if (id > partyCount()) revert DoesntExist();
     Party storage party = _parties[id];
     if (!isDelegateOfAnyToken(msg.sender, party.token)) revert NotDelegator();
-    (uint pIndex, uint uIndex) = getIndex(msg.sender, id);
+    (uint pIndex, uint uIndex) = _getIndex(msg.sender, id);
     _usersParties[msg.sender][uIndex] = _usersParties[msg.sender][_usersParties[msg.sender].length - 1];
     party.delegators[pIndex] = party.delegators[party.delegators.length - 1];
     party.delegators.pop();
@@ -109,7 +109,7 @@ contract PartyAggregator is IPartyAggregator {
   }
 
   // View functions
-  function getIndex(address user, uint id) internal view returns (uint pIndex, uint uIndex) {
+  function _getIndex(address user, uint id) internal view returns (uint pIndex, uint uIndex) {
     Party memory party = _parties[id];
     uint[] memory list = _usersParties[msg.sender];
     for(uint i = 0; i<list.length;i++) {
@@ -121,6 +121,10 @@ contract PartyAggregator is IPartyAggregator {
     }
 
     return (pIndex,uIndex);
+  }
+
+  function userParties(address user) public view returns (uint[] memory) {
+    return _usersParties[user];
   }
 
   function isDelegateOf(address _user, address _token) public view returns (bool) {
