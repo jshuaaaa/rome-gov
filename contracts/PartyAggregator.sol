@@ -62,6 +62,7 @@ contract PartyAggregator is IPartyAggregator {
   }
 
   uint256 private _partyCount = 0;
+  uint8 constant MAX_PARTY_TOKENS = 10;
   uint40 constant PROPOSAL_DURATION = 1 weeks;
   uint256 private _delegatorThreshold;
 
@@ -96,7 +97,32 @@ contract PartyAggregator is IPartyAggregator {
     emit JoinedParty(party.id, msg.sender);
   }
 
+  function leaveParty(uint256 id) external {
+    if (id > partyCount()) revert DoesntExist();
+    Party storage party = _parties[id];
+    if (!isDelegateOfAnyToken(msg.sender, party.token)) revert NotDelegator();
+    (uint pIndex, uint uIndex) = getIndex(msg.sender, id);
+    _usersParties[msg.sender][uIndex] = _usersParties[msg.sender][_usersParties[msg.sender].length - 1];
+    party.delegators[pIndex] = party.delegators[party.delegators.length - 1];
+    party.delegators.pop();
+    _usersParties[msg.sender].pop();
+  }
+
   // View functions
+  function getIndex(address user, uint id) internal view returns (uint pIndex, uint uIndex) {
+    Party memory party = _parties[id];
+    uint[] memory list = _usersParties[msg.sender];
+    for(uint i = 0; i<list.length;i++) {
+        if(list[i] == id) uIndex = i;
+    }
+
+    for(uint i = 0; i<list.length;i++) {
+        if(party.delegators[i] == user) pIndex = i;
+    }
+
+    return (pIndex,uIndex);
+  }
+
   function isDelegateOf(address _user, address _token) public view returns (bool) {
     uint256[] memory list = _usersParties[_user];
     for (uint256 i = 0; i < list.length; i++) {

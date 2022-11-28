@@ -57,4 +57,14 @@ describe('PartyAggregator', function () {
     expect(await partyAgg.isDelegateOf(user.address, token.address)).to.equal(true);
     expect(await partyAgg.isDelegateOf(deployer.address, token.address)).to.equal(true);
   });
+
+  it('leaveParty()', async () => {
+    await partyAgg.createParty('Chads', token.address);
+    const connect = await partyAgg.connect(deployer);
+    await connect.joinParty(1);
+    await connect.leaveParty(1);
+    const party = await partyAgg.parties(1);
+
+    expect(party.delegators.length).to.equal(1);
+  })
 });
