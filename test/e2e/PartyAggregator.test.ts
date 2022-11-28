@@ -43,7 +43,18 @@ describe('PartyAggregator', function () {
     const connect = await partyAgg.connect(deployer);
     const count = await partyAgg.partyCount();
     expect(count.toString()).to.equal('1');
-    await connect.createParty('Chads', token.address);
+    await connect.createParty('Chadsss', token.address);
     await expect(partyAgg.createParty('Chads', token.address)).to.be.revertedWith('AlreadyHasAParty');
+  });
+
+  it('joinParty()', async () => {
+    await partyAgg.createParty('Chads', token.address);
+    const connect = await partyAgg.connect(deployer);
+    await connect.joinParty(1);
+    const party = await partyAgg.parties(1);
+    expect(party.delegators.length).to.equal(2);
+
+    expect(await partyAgg.isDelegateOf(user.address, token.address)).to.equal(true);
+    expect(await partyAgg.isDelegateOf(deployer.address, token.address)).to.equal(true);
   });
 });

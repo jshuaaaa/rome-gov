@@ -25,7 +25,7 @@ contract PartyAggregator is IPartyAggregator {
     /// @notice The ordered list of function signatures to be called.
     string[] signatures;
     /// @notice The ordered list of calldata to be passed to each call.
-    bytes[] calldatas;
+    string[] calldatas;
     /// @notice The timestamp at which voting ends: votes must be cast prior to this timestamp.
     uint256 endTimestamp;
     /// @notice Current number of votes in favor of this proposal.
@@ -57,6 +57,8 @@ contract PartyAggregator is IPartyAggregator {
     uint256 threshold;
     /// @notice current number of proposals
     uint256 proposalCount;
+    /// @notice owner of party
+    address owner;
   }
 
   uint256 private _partyCount = 0;
@@ -77,10 +79,21 @@ contract PartyAggregator is IPartyAggregator {
     tokens[0] = _token;
     users[0] = msg.sender;
 
-    _parties[count] = Party({id: count, name: name, delegators: users, token: tokens, threshold: 0, proposalCount: 0});
+    _parties[count] = Party({id: count, name: name, delegators: users, token: tokens, threshold: 0, proposalCount: 0, owner: msg.sender});
     _usersParties[msg.sender].push(count);
 
-    emit PartyCreated(count);
+    emit PartyCreated(count, name);
+  }
+
+  function joinParty(uint256 id) external {
+    if (id > partyCount()) revert DoesntExist();
+    Party storage party = _parties[id];
+    if (isDelegateOfAnyToken(msg.sender, party.token)) revert AlreadyHasAParty();
+
+    _usersParties[msg.sender].push(id);
+    party.delegators.push(msg.sender);
+
+    emit JoinedParty(party.id, msg.sender);
   }
 
   // View functions
@@ -95,7 +108,43 @@ contract PartyAggregator is IPartyAggregator {
     return false;
   }
 
+  function isDelegateOfAnyToken(address _user, address[] memory _token) public view returns (bool) {
+    uint256[] memory list = _usersParties[_user];
+    for (uint256 i = 0; i < list.length; i++) {
+      Party memory party = _parties[list[i]];
+      for (uint256 j = 0; j < party.token.length; j++) {
+        for (uint256 z = 0; z < _token.length; z++) {
+          if (_token[z] == party.token[j]) return true;
+        }
+      }
+    }
+    return false;
+  }
+
   function partyCount() public view returns (uint256) {
     return _partyCount;
+  }
+
+  function parties(uint256 id)
+    public
+    view
+    returns (
+      string memory name,
+      address[] memory delegators,
+      address[] memory token,
+      uint256 threshold,
+      uint256 proposalCount,
+      address owner
+    )
+  {
+    Party memory party = _parties[id];
+    return (
+      name = party.name,
+      delegators = party.delegators,
+      token = party.token,
+      threshold = party.threshold,
+      proposalCount = party.proposalCount,
+      owner = party.owner
+    );
   }
 }
