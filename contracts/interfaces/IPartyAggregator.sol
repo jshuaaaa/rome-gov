@@ -6,6 +6,7 @@ interface IPartyAggregator {
   error NotDelegator();
   error DoesntExist();
   error PartyExists();
+  error IsOwner();
 
   event PartyCreated(uint256, string);
   event JoinedParty(uint256, address);
@@ -17,4 +18,5 @@ interface IPartyAggregator {
   function isDelegateOf(address, address) external view returns (bool);
   function isDelegateOfAnyToken(address _user, address[] memory _token) external view returns (bool);
   function partyCount() external view returns (uint256);
+  function isParty(uint256) external view returns (bool);
 }

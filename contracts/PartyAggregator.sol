@@ -5,6 +5,7 @@ import './interfaces/IPartyAggregator.sol';
 import 'hardhat/console.sol';
 
 contract PartyAggregator is IPartyAggregator {
+  
   enum partyVerdict {
     Pending,
     Possitive,
@@ -101,11 +102,18 @@ contract PartyAggregator is IPartyAggregator {
     if (id > partyCount()) revert DoesntExist();
     Party storage party = _parties[id];
     if (!isDelegateOfAnyToken(msg.sender, party.token)) revert NotDelegator();
+    if(msg.sender == party.owner) revert IsOwner();
     (uint pIndex, uint uIndex) = _getIndex(msg.sender, id);
     _usersParties[msg.sender][uIndex] = _usersParties[msg.sender][_usersParties[msg.sender].length - 1];
     party.delegators[pIndex] = party.delegators[party.delegators.length - 1];
     party.delegators.pop();
     _usersParties[msg.sender].pop();
+  }
+
+  function changeOwner(uint256 id, address newOwner) external {
+    Party storage party = _parties[id];
+    if(newOwner == party.owner) revert IsOwner();
+    party.owner = newOwner;
   }
 
   // View functions
@@ -153,6 +161,11 @@ contract PartyAggregator is IPartyAggregator {
 
   function partyCount() public view returns (uint256) {
     return _partyCount;
+  }
+
+  function isParty(uint256 id) public view returns (bool) {
+    if(id > _partyCount) return false;
+    return true;
   }
 
   function parties(uint256 id)
